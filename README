@@ -1,0 +1,5 @@
+This project serves to flash the Discovery boards by STMicroelectronics <http://www.st.com/>,
+especially the STM8S-Discovery from my Mac OS X v10.5 ppc host for my LLVM/clang STM8 backend.
+
+This work is based on data from various blog posts as well as some trial-and-error,
+so use with care. Unfortunately the licensing is a bit unclear.
