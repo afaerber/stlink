@@ -16,7 +16,7 @@ KEXT=STLink
 load-kext:
 	-sudo rm -rf $(DEST)/$(KEXT).kext
 	mkdir -p $(DEST)/$(KEXT).kext/Contents
-	cp Info.plist $(DEST)/$(KEXT).kext/Contents/
+	cp darwin/Info.plist $(DEST)/$(KEXT).kext/Contents/
 	sudo chown -R root:wheel $(DEST)/$(KEXT).kext
 	sudo chmod -R 0644 $(DEST)/$(KEXT).kext
 	sudo kextload -v $(DEST)/$(KEXT).kext
