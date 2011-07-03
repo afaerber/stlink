@@ -18,10 +18,19 @@
 #include "stlink.h"
 
 
+static inline void dump_cdb(uint8_t *cdb, uint8_t len)
+{
+    printf("%s: CDB:", __func__);
+    for (int i = 0; i < len; i++) {
+        printf(" %02" PRIX8, cdb[i]);
+    }
+    printf("\n");
+}
+
 void stlink_get_version(stlink *stl)
 {
     printf("getting version...\n");
-    uint8_t cdb[10];
+    uint8_t cdb[6]; // sic!
     memset(cdb, 0, sizeof(cdb));
     cdb[0] = STLINK_GET_VERSION;
     unsigned char buf[6];
@@ -76,7 +85,7 @@ void stlink_exit_dfu_mode(stlink *stl)
 void stlink_enter_swd_mode(stlink *stl)
 {
     printf("entering SWD mode...\n");
-    uint8_t cdb[6];
+    uint8_t cdb[10];
     memset(cdb, 0, sizeof(cdb));
     cdb[0] = STLINK_DEBUG_COMMAND;
     cdb[1] = STLINK_DEBUG_ENTER;
@@ -87,4 +96,241 @@ void stlink_enter_swd_mode(stlink *stl)
         return;
     }
     printf("entered SWD mode\n");
+}
+
+void stlink_swim_enter(stlink *stl)
+{
+    printf("entering SWIM mode...\n");
+    uint8_t cdb[2];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_ENTER;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return;
+    }
+    printf("entered SWIM mode\n");
+}
+
+int stlink_swim_get_size(stlink *stl, uint16_t *size)
+{
+    printf("reading size...\n");
+    uint8_t cdb[2];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_GET_SIZE;
+    uint16_t buf;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), (unsigned char *)&buf, sizeof(buf));
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    *size = le16_to_cpu(buf);
+    return 0;
+}
+
+int stlink_swim_get_02(stlink *stl)
+{
+    printf("reading 0x02...\n");
+    uint8_t cdb[3];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_GET_02;
+    cdb[2] = 0x01;
+    uint8_t buf[8];
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), buf, sizeof(buf));
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    printf("%s:", __func__);
+    for (int i = 0; i < sizeof(buf); i++) {
+        printf(" %02" PRIX8, buf[i]);
+    }
+    printf("\n");
+    return 0;
+}
+
+int stlink_swim_do_03(stlink *stl, uint8_t x)
+{
+    printf("doing 0x03...\n");
+    uint8_t cdb[3];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_DO_03;
+    cdb[2] = x;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
+}
+
+int stlink_swim_do_04(stlink *stl)
+{
+    printf("doing 0x04...\n");
+    uint8_t cdb[10];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_DO_04;
+    cdb[2] = 0x01;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
+}
+
+int stlink_swim_do_05(stlink *stl)
+{
+    printf("doing 0x05...\n");
+    uint8_t cdb[10];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_DO_05;
+    cdb[2] = 0x00;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
+}
+
+int stlink_swim_do_06(stlink *stl, uint32_t addr, uint16_t length, uint8_t x)
+{
+    printf("doing 0x06...\n");
+    uint8_t cdb[10];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_DO_06;
+    *(uint16_t *)&cdb[2] = cpu_to_be32(length);
+    *(uint32_t *)&cdb[4] = cpu_to_be32(addr);
+    cdb[8] = x;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
+}
+
+int stlink_swim_do_07(stlink *stl)
+{
+    printf("doing 0x07...\n");
+    uint8_t cdb[10];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_DO_07;
+    cdb[2] = 0x01;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
+}
+
+int stlink_swim_do_08(stlink *stl, uint32_t addr, uint16_t length, uint8_t x)
+{
+    printf("doing 0x08...\n");
+    uint8_t cdb[10];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_DO_08;
+    *(uint16_t *)&cdb[2] = cpu_to_be32(length);
+    *(uint32_t *)&cdb[4] = cpu_to_be32(addr);
+    cdb[8] = x;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
+}
+
+int stlink_swim_get_busy(stlink *stl, uint32_t addr, uint16_t len, uint8_t x, uint32_t *status)
+{
+    printf("reading 0x09...\n");
+    uint8_t cdb[10];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_GET_BUSY;
+    *(uint16_t *)&cdb[2] = cpu_to_be16(len);
+    *(uint32_t *)&cdb[4] = cpu_to_be32(addr);
+    cdb[8] = x;
+    uint8_t buf[4];
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), buf, sizeof(buf));
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+#if 0
+    printf("%s:", __func__);
+    for (int i = 0; i < sizeof(buf); i++) {
+        printf(" %02" PRIX8, buf[i]);
+    }
+    printf("\n");
+#endif
+    uint32_t count = (buf[3] << 16) | (buf[2] << 8) | buf[1];
+    printf("%s: busy = 0x%02" PRIX8 ", count = 0x%06" PRIx32 "\n", __func__, buf[0], count);
+    *status = le32_to_cpu(*(uint32_t *)buf);
+    return 0;
+}
+
+int stlink_swim_do_0a(stlink *stl, uint32_t addr, uint16_t len, uint8_t x)
+{
+    printf("doing 0x0a...\n");
+    uint8_t cdb[16];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_DO_0A;
+    *(uint16_t *)&cdb[2] = cpu_to_be16(len);
+    *(uint32_t *)&cdb[4] = cpu_to_be32(addr);
+    cdb[8] = x;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
+}
+
+int stlink_swim_do_0b(stlink *stl, uint32_t addr, uint16_t len, uint8_t x)
+{
+    printf("doing 0x0b...\n");
+    uint8_t cdb[10];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_DO_0B;
+    *(uint16_t *)&cdb[2] = cpu_to_be16(len);
+    *(uint32_t *)&cdb[4] = cpu_to_be32(addr);
+    cdb[8] = x;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
+}
+
+int stlink_swim_read_flash(stlink *stl, uint32_t addr, uint16_t length, uint8_t x, uint8_t *buffer)
+{
+    printf("reading at 0x%06" PRIx32 " (%" PRIx16 ")...\n", addr, length);
+    uint8_t cdb[10];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_READ;
+    *(uint16_t *)&cdb[2] = cpu_to_be16(length);
+    *(uint32_t *)&cdb[4] = cpu_to_be32(addr);
+    cdb[8] = x;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), buffer, length);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    return 0;
 }

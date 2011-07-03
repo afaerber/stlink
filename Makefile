@@ -2,10 +2,12 @@ all: stlink
 
 .PHONY: test load-kext
 
+CFLAGS = -std=gnu99 -Wall -Werror
+
 -include config.mak
 
 stlink: main.c stlink-libusb.c stlink-libusb.h stlink-cmd.c stlink.h bswap.h Makefile
-	$(CC) -o $@ $(CPPFLAGS) -std=gnu99 main.c stlink-libusb.c stlink-cmd.c $(LDFLAGS) -lusb-1.0
+	$(CC) -o $@ $(CPPFLAGS) $(CFLAGS) main.c stlink-libusb.c stlink-cmd.c $(LDFLAGS) -lusb-1.0
 
 test: stlink
 	./stlink

@@ -100,7 +100,7 @@ stlink *stlink_open(libusb_context *usb_context)
     if (ret == 1) {
         printf("kernel driver active\n");
     } else if (ret == 0) {
-        printf("kernel driver not active\n");
+        //printf("kernel driver not active\n");
     } else {
         fprintf(stderr, "libusb_kernel_driver_active = %d\n", ret);
     }
@@ -193,8 +193,9 @@ get_usb_mass_storage_status(libusb_device_handle *handle, uint8_t endpoint, uint
     if (csw.dCSWSignature != USB_CSW_SIGNATURE) {
         fprintf(stderr, "%s: received wrong signature: %04" PRIX32 "\n",
                 __func__, csw.dCSWSignature);
+        return -1;
     }
-    printf("%s: \n", __func__);
+    //printf("%s: residue = 0x%" PRIx32 "\n", __func__);
     *tag = csw.dCSWTag;
     return csw.bCSWStatus;
 }
@@ -250,6 +251,11 @@ get_sense(libusb_device_handle *handle, uint8_t endpoint_in, uint8_t endpoint_ou
 int stlink_send_command(stlink *stl, uint8_t *cdb, uint8_t cdb_length,
                         uint8_t *buffer, int expected_length)
 {
+    printf("%s: CDB:", __func__);
+    for (int i = 0; i < cdb_length; i++) {
+        printf(" %02" PRIX8, cdb[i]);
+    }
+    printf("\n");
     uint8_t lun = 0;
     uint32_t tag = send_usb_mass_storage_command(stl->handle, stl->endpoint_out,
                                                  cdb, cdb_length, lun,
@@ -258,8 +264,8 @@ int stlink_send_command(stlink *stl, uint8_t *cdb, uint8_t cdb_length,
         fprintf(stderr, "%s: sending failed\n", __func__);
         return -1;
     }
+    int transferred;
     if (expected_length > 0) {
-        int transferred;
         int ret;
         int try = 0;
         do {
@@ -295,6 +301,9 @@ int stlink_send_command(stlink *stl, uint8_t *cdb, uint8_t cdb_length,
         fprintf(stderr, "%s: received tag %08" PRIx32 " but expected %08" PRIx32 "\n",
                 __func__, received_tag, tag);
         //return -1;
+    }
+    if (expected_length > 0 && transferred != expected_length) {
+        return -1;
     }
     return 0;
 }
