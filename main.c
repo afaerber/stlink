@@ -63,6 +63,17 @@ static inline int swim_poll(stlink *stl, uint32_t addr, uint16_t len, uint8_t x)
     if (ret != 0) \
         return
 
+#define SWIM_READ(addr, len, x1, buf) \
+    ret = stlink_swim_do_0b(stl, addr, len, x1); \
+    if (ret != 0) \
+        return; \
+    ret = swim_poll(stl, addr, len, x1); \
+    if (ret != 0) \
+        return; \
+    ret = stlink_swim_read_flash(stl, addr, len, x1, buf); \
+    if (ret != 0) \
+        return
+
 static void swim(stlink *stl)
 {
     uint16_t size = 0;
@@ -82,51 +93,38 @@ static void swim(stlink *stl)
     CHECK_SWIM0(stlink_swim_do_05(stl));
     CHECK_SWIMxy(stlink_swim_do_0a(stl, 0x7f80, 1, 0xa0), 0x7f80, 1, 0xa0);
     CHECK_SWIMxy(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0), 0x7f80, 1, 0xa0);
-    CHECK_SWIMxy(stlink_swim_do_0b(stl, 0x7f99, 1, 0xa0), 0x7f99, 1, 0xa0);
+
     uint8_t *buf = malloc(0x1800);
-    ret = stlink_swim_read_flash(stl, 0x7f99, 1, 0xa0, buf);
-    if (ret != 0)
-        return;
+
+    SWIM_READ(0x7f99, 1, 0xa0, buf);
     dump_data(buf, 1);
+
     CHECK_SWIMxy(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0), 0x7f99, 1, 0xa0);
     CHECK_SWIMxy(stlink_swim_do_0a(stl, 0x7f80, 1, 0xb0), 0x7f80, 1, 0xb0);
     CHECK_SWIMxy(stlink_swim_do_03(stl, 0x01), 0x7f80, 0x0101, 0xb0);
     CHECK_SWIMxy(stlink_swim_do_0a(stl, 0x7f80, 1, 0xb4), 0x7f80, 1, 0xb4);
-    CHECK_SWIMxy(stlink_swim_do_0b(stl, 0x67f0, 6, 0x00), 0x67f0, 6, 0x00);
-    ret = stlink_swim_read_flash(stl, 0x67f0, 6, 0x00, buf);
-    if (ret != 0)
-        return;
+
+    SWIM_READ(0x67f0, 6, 0x00, buf);
     dump_data(buf, 6);
-    CHECK_SWIMxy(stlink_swim_do_0b(stl, 0x5808, 1, 0x00), 0x5808, 1, 0x00);
-    ret = stlink_swim_read_flash(stl, 0x5808, 1, 0x00, buf);
-    if (ret != 0)
-        return;
+
+    SWIM_READ(0x5808, 1, 0x00, buf);
     dump_data(buf, 1);
-    CHECK_SWIMxy(stlink_swim_do_0b(stl, 0x488e, 2, 0x00), 0x488e, 2, 0x00);
-    ret = stlink_swim_read_flash(stl, 0x488e, 2, 0x00, buf);
-    if (ret != 0)
-        return;
+
+    SWIM_READ(0x488e, 2, 0x00, buf);
     dump_data(buf, 2);
-    CHECK_SWIMxy(stlink_swim_do_0b(stl, 0x4800, 1, 0x00), 0x4800, 1, 0x00);
-    ret = stlink_swim_read_flash(stl, 0x4800, 1, 0x00, buf);
-    if (ret != 0)
-        return;
+
+    SWIM_READ(0x4800, 1, 0x00, buf);
     dump_data(buf, 1);
-    CHECK_SWIMxy(stlink_swim_do_0b(stl, 0x4801, 1, 0x00), 0x4801, 1, 0x00);
-    ret = stlink_swim_read_flash(stl, 0x4801, 1, 0x00, buf);
-    if (ret != 0)
-        return;
+
+    SWIM_READ(0x4801, 1, 0x00, buf);
     dump_data(buf, 1);
-    CHECK_SWIMxy(stlink_swim_do_0b(stl, 0x4802, 1, 0x00), 0x4802, 1, 0x00);
-    ret = stlink_swim_read_flash(stl, 0x4802, 1, 0x00, buf);
-    if (ret != 0)
-        return;
+
+    SWIM_READ(0x4802, 1, 0x00, buf);
     dump_data(buf, 1);
-    CHECK_SWIMxy(stlink_swim_do_0b(stl, 0x8000, 0x1800, 0x00), 0x4802, 0x1800, 0x00);
-    ret = stlink_swim_read_flash(stl, 0x8000, 0x1800, 0x00, buf);
-    if (ret == 0) {
-        dump_data(buf, 0x1800);
-    }
+
+    SWIM_READ(0x8000, 0x1800, 0x00, buf);
+    dump_data(buf, 0x1800);
+
     free(buf);
 }
 
