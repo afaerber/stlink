@@ -299,13 +299,13 @@ int stlink_swim_do_0a(stlink *stl, uint32_t addr, uint16_t len, uint8_t x)
     return 0;
 }
 
-int stlink_swim_do_0b(stlink *stl, uint32_t addr, uint16_t len, uint8_t x)
+int stlink_swim_begin_read(stlink *stl, uint32_t addr, uint16_t len, uint8_t x)
 {
-    printf("doing 0x0b...\n");
+    printf("initiating read at 0x%06" PRIx32 " (0x%" PRIx16 ")...\n", addr, len);
     uint8_t cdb[10];
     memset(cdb, 0, sizeof(cdb));
     cdb[0] = STLINK_SWIM_COMMAND;
-    cdb[1] = STLINK_SWIM_DO_0B;
+    cdb[1] = STLINK_SWIM_BEGIN_READ;
     *(uint16_t *)&cdb[2] = cpu_to_be16(len);
     *(uint32_t *)&cdb[4] = cpu_to_be32(addr);
     cdb[8] = x;
@@ -317,7 +317,7 @@ int stlink_swim_do_0b(stlink *stl, uint32_t addr, uint16_t len, uint8_t x)
     return 0;
 }
 
-int stlink_swim_read_flash(stlink *stl, uint32_t addr, uint16_t length, uint8_t x, uint8_t *buffer)
+int stlink_swim_read(stlink *stl, uint32_t addr, uint16_t length, uint8_t x, uint8_t *buffer)
 {
     printf("reading at 0x%06" PRIx32 " (%" PRIx16 ")...\n", addr, length);
     uint8_t cdb[10];

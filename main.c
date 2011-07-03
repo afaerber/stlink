@@ -64,13 +64,13 @@ static inline int swim_poll(stlink *stl, uint32_t addr, uint16_t len, uint8_t x)
         return
 
 #define SWIM_READ(addr, len, x1, buf) \
-    ret = stlink_swim_do_0b(stl, addr, len, x1); \
+    ret = stlink_swim_begin_read(stl, addr, len, x1); \
     if (ret != 0) \
         return; \
     ret = swim_poll(stl, addr, len, x1); \
     if (ret != 0) \
         return; \
-    ret = stlink_swim_read_flash(stl, addr, len, x1, buf); \
+    ret = stlink_swim_read(stl, addr, len, x1, buf); \
     if (ret != 0) \
         return
 

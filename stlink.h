@@ -37,7 +37,7 @@ enum STLinkSWIMCommands {
     STLINK_SWIM_DO_08       = 0x08,
     STLINK_SWIM_GET_BUSY    = 0x09,
     STLINK_SWIM_DO_0A       = 0x0a,
-    STLINK_SWIM_DO_0B       = 0x0b,
+    STLINK_SWIM_BEGIN_READ  = 0x0b,
     STLINK_SWIM_READ        = 0x0c,
     STLINK_SWIM_GET_SIZE    = 0x0d,
 };
