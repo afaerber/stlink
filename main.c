@@ -94,7 +94,7 @@ static void swim(stlink *stl)
     CHECK_SWIMxy(stlink_swim_do_0a(stl, 0x7f80, 1, 0xa0), 0x7f80, 1, 0xa0);
     CHECK_SWIMxy(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0), 0x7f80, 1, 0xa0);
 
-    uint8_t *buf = malloc(0x1800);
+    uint8_t *buf = malloc(size);
 
     SWIM_READ(0x7f99, 1, 0xa0, buf);
     dump_data(buf, 1);
@@ -122,8 +122,8 @@ static void swim(stlink *stl)
     SWIM_READ(0x4802, 1, 0x00, buf);
     dump_data(buf, 1);
 
-    SWIM_READ(0x8000, 0x1800, 0x00, buf);
-    dump_data(buf, 0x1800);
+    SWIM_READ(0x8000, size, 0x00, buf);
+    dump_data(buf, size);
 
     free(buf);
 }
