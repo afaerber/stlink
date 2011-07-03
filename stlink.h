@@ -30,7 +30,7 @@ enum STLinkSWIMCommands {
     STLINK_SWIM_ENTER       = 0x00,
     STLINK_SWIM_GET_02      = 0x02,
     STLINK_SWIM_DO_03       = 0x03,
-    STLINK_SWIM_DO_04       = 0x04, // causes demo to stop blinking
+    STLINK_SWIM_DO_04       = 0x04,
     STLINK_SWIM_DO_05       = 0x05,
     STLINK_SWIM_DO_06       = 0x06,
     STLINK_SWIM_DO_07       = 0x07,
