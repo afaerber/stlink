@@ -28,6 +28,7 @@ enum {
 
 enum STLinkSWIMCommands {
     STLINK_SWIM_ENTER       = 0x00,
+    STLINK_SWIM_EXIT        = 0x01,
     STLINK_SWIM_GET_02      = 0x02,
     STLINK_SWIM_DO_03       = 0x03,
     STLINK_SWIM_DO_04       = 0x04,

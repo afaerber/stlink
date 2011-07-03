@@ -321,6 +321,7 @@ static void connect(libusb_context *usb_context)
     }
     if (mode == STLINK_DEV_SWIM_MODE) {
         swim(stl);
+        stlink_swim_exit(stl);
     }
 
     stlink_close(stl);

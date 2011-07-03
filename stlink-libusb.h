@@ -17,6 +17,7 @@ int stlink_get_current_mode(stlink *stl);
 void stlink_exit_dfu_mode(stlink *stl);
 void stlink_enter_swd_mode(stlink *stl);
 void stlink_swim_enter(stlink *stl);
+int stlink_swim_exit(stlink *stl);
 int stlink_swim_get_size(stlink *stl, uint16_t *size);
 int stlink_swim_get_02(stlink *stl);
 int stlink_swim_do_03(stlink *stl, uint8_t x);

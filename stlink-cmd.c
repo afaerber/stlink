@@ -113,6 +113,22 @@ void stlink_swim_enter(stlink *stl)
     printf("entered SWIM mode\n");
 }
 
+int stlink_swim_exit(stlink *stl)
+{
+    printf("exiting SWIM mode...\n");
+    uint8_t cdb[2];
+    memset(cdb, 0, sizeof(cdb));
+    cdb[0] = STLINK_SWIM_COMMAND;
+    cdb[1] = STLINK_SWIM_EXIT;
+    int ret = stlink_send_command(stl, cdb, sizeof(cdb), NULL, 0);
+    if (ret != 0) {
+        fprintf(stderr, "%s: command failed: %d\n", __func__, ret);
+        return -1;
+    }
+    printf("exited SWIM mode\n");
+    return 0;
+}
+
 int stlink_swim_get_size(stlink *stl, uint16_t *size)
 {
     printf("reading size...\n");
