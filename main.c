@@ -131,8 +131,14 @@ static void swim(stlink *stl)
 #endif
 
     // Flash program memory
-    SWIM_READ(0x8000, size, 0x00, buf);
-    dump_data(buf, size);
+    uint32_t flash_start = 0x8000;
+    uint16_t flash_size = 32 * 1024;
+    uint32_t flash_end = flash_start + flash_size;
+    for (uint32_t addr = flash_start; addr < flash_end; addr += size) {
+        uint16_t len = (addr + size > flash_end) ? (flash_end - addr) : size;
+        SWIM_READ(addr, len, 0x00, buf);
+        dump_data(buf, len);
+    }
 
     free(buf);
 }
