@@ -104,24 +104,33 @@ static void swim(stlink *stl)
     CHECK_SWIMxy(stlink_swim_do_03(stl, 0x01), 0x7f80, 0x0101, 0xb0);
     CHECK_SWIMxy(stlink_swim_do_0a(stl, 0x7f80, 1, 0xb4), 0x7f80, 1, 0xb4);
 
+#if 0
+    // ??? boot ROM
     SWIM_READ(0x67f0, 6, 0x00, buf);
     dump_data(buf, 6);
 
+    // ??? reserved (between GPIO and periph. reg. and boot ROM)
     SWIM_READ(0x5808, 1, 0x00, buf);
     dump_data(buf, 1);
 
+    // ??? option bytes
     SWIM_READ(0x488e, 2, 0x00, buf);
     dump_data(buf, 2);
 
+    // Read-out protection (ROP)
     SWIM_READ(0x4800, 1, 0x00, buf);
     dump_data(buf, 1);
 
+    // User boot code (UBC) (OPT1)
     SWIM_READ(0x4801, 1, 0x00, buf);
     dump_data(buf, 1);
 
+    // User boot code (UBC) (NOPT1)
     SWIM_READ(0x4802, 1, 0x00, buf);
     dump_data(buf, 1);
+#endif
 
+    // Flash program memory
     SWIM_READ(0x8000, size, 0x00, buf);
     dump_data(buf, size);
 
