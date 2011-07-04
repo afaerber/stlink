@@ -249,7 +249,7 @@ get_sense(libusb_device_handle *handle, uint8_t endpoint_in, uint8_t endpoint_ou
 }
 
 int stlink_send_command(stlink *stl, uint8_t *cdb, uint8_t cdb_length,
-                        uint8_t *buffer, int expected_length)
+                        uint8_t *buffer, int transfer_length, bool inbound)
 {
     printf("%s: CDB:", __func__);
     for (int i = 0; i < cdb_length; i++) {
@@ -259,17 +259,19 @@ int stlink_send_command(stlink *stl, uint8_t *cdb, uint8_t cdb_length,
     uint8_t lun = 0;
     uint32_t tag = send_usb_mass_storage_command(stl->handle, stl->endpoint_out,
                                                  cdb, cdb_length, lun,
-                                                 LIBUSB_ENDPOINT_IN, expected_length);
+                                                 LIBUSB_ENDPOINT_IN, transfer_length);
     if (tag == 0) {
         fprintf(stderr, "%s: sending failed\n", __func__);
         return -1;
     }
     int transferred;
-    if (expected_length > 0) {
+    if (transfer_length > 0) {
         int ret;
         int try = 0;
         do {
-            ret = libusb_bulk_transfer(stl->handle, stl->endpoint_in, buffer, expected_length,
+            ret = libusb_bulk_transfer(stl->handle,
+                                       (!inbound) ? stl->endpoint_out : stl->endpoint_in,
+                                       buffer, transfer_length,
                                        &transferred, STLINK_TIMEOUT_MS);
             if (ret == LIBUSB_ERROR_PIPE) {
                 libusb_clear_halt(stl->handle, stl->endpoint_in);
@@ -277,11 +279,11 @@ int stlink_send_command(stlink *stl, uint8_t *cdb, uint8_t cdb_length,
             try++;
         } while ((ret == LIBUSB_ERROR_PIPE) && (try < RETRY_MAX));
         if (ret != LIBUSB_SUCCESS) {
-            fprintf(stderr, "%s: receiving failed: %d\n", __func__, ret);
+            fprintf(stderr, "%s: transferring failed: %d\n", __func__, ret);
             return -1;
         }
-        if (transferred != expected_length) {
-            fprintf(stderr, "%s: received unexpected amount: %d\n", __func__, transferred);
+        if (transferred != transfer_length) {
+            fprintf(stderr, "%s: transferred unexpected amount: %d\n", __func__, transferred);
         }
     }
     uint32_t received_tag;
@@ -302,7 +304,7 @@ int stlink_send_command(stlink *stl, uint8_t *cdb, uint8_t cdb_length,
                 __func__, received_tag, tag);
         //return -1;
     }
-    if (expected_length > 0 && transferred != expected_length) {
+    if (transfer_length > 0 && transferred != transfer_length) {
         return -1;
     }
     return 0;
