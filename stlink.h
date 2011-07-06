@@ -51,4 +51,41 @@ enum STLinkModes {
 };
 
 
+// UM0470
+enum STM8CPURegisters {
+    STM8_REG_A      = 0x7f00,
+    STM8_REG_PCE    = 0x7f01,
+    STM8_REG_PCH    = 0x7f02,
+    STM8_REG_PCL    = 0x7f03,
+    STM8_REG_XH     = 0x7f04,
+    STM8_REG_XL     = 0x7f05,
+    STM8_REG_YH     = 0x7f06,
+    STM8_REG_YL     = 0x7f07,
+    STM8_REG_SPH    = 0x7f08,
+    STM8_REG_SPL    = 0x7f09,
+    STM8_REG_CC     = 0x7f0a,
+};
+
+// UM0470
+enum STM8SWIMRegisters {
+    STM8_SWIM_CSR   = 0x7f80,
+    // CLK_SWIMCCR product dependent (50CDh)
+};
+
+// UM0470
+enum STM8DMRegisters {
+    STM8_DM_BRK1E   = 0x7f90,
+    STM8_DM_BKR1H   = 0x7f91,
+    STM8_DM_BRK1L   = 0x7f92,
+    STM8_DM_BRK2E   = 0x7f93,
+    STM8_DM_BRK2H   = 0x7f94,
+    STM8_DM_BRK2L   = 0x7f95,
+    STM8_DM_CR1     = 0x7f96,
+    STM8_DM_CR2     = 0x7f97,
+    STM8_DM_CSR1    = 0x7f98,
+    STM8_DM_CSR2    = 0x7f99,
+    STM8_DM_ENFCTR  = 0x7f9a,
+};
+
+
 #endif
