@@ -93,6 +93,10 @@ static void swim(stlink *stl)
     buf[0] = 0xb4;
     CHECK_SWIM(stlink_swim_write(stl, 0x7f80, 1, buf));
 
+    // ??? GPIO and periph. reg.
+    buf[0] = 0x00;
+    CHECK_SWIM(stlink_swim_write(stl, 0x50c6, 1, buf));
+
 #if 0
     // ??? boot ROM
     SWIM_READ(0x67f0, 6, 0x00, buf);
