@@ -87,5 +87,10 @@ enum STM8DMRegisters {
     STM8_DM_ENFCTR  = 0x7f9a,
 };
 
+enum STM8S105xxRegisters {
+    STM8S105_CLK_CKDIVR     = 0x50c6,
+    STM8S105_CLK_SWIMCCR    = 0x50cd,
+};
+
 
 #endif

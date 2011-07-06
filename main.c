@@ -93,9 +93,8 @@ static void swim(stlink *stl)
     buf[0] = 0xb4;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
 
-    // ??? GPIO and periph. reg.
     buf[0] = 0x00;
-    CHECK_SWIM(stlink_swim_write(stl, 0x50c6, 1, buf));
+    CHECK_SWIM(stlink_swim_write(stl, STM8S105_CLK_CKDIVR, 1, buf));
 
 #if 0
     // ??? boot ROM
@@ -169,9 +168,8 @@ static void swim(stlink *stl)
     buf[0] = 0xb4;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
 
-    // ??? GPIO and periph. reg.
     buf[0] = 0x00;
-    CHECK_SWIM(stlink_swim_write(stl, 0x50c6, 1, buf));
+    CHECK_SWIM(stlink_swim_write(stl, STM8S105_CLK_CKDIVR, 1, buf));
 
 #if 0
     // ??? boot ROM
@@ -244,9 +242,8 @@ static void swim(stlink *stl)
     buf[0] = 0xb4;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
 
-    // ??? GPIO and periph. reg.
     buf[0] = 0x00;
-    CHECK_SWIM(stlink_swim_write(stl, 0x50c6, 1, buf));
+    CHECK_SWIM(stlink_swim_write(stl, STM8S105_CLK_CKDIVR, 1, buf));
 
 #if 0
     // ??? boot ROM
