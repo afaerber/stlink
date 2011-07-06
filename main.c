@@ -47,14 +47,14 @@ static inline int swim_poll(stlink *stl)
     if (ret != 0) \
         return
 
-#define SWIM_READ(addr, len, x1, buf) \
-    ret = stlink_swim_begin_read(stl, addr, len, x1); \
+#define SWIM_READ(addr, len, buf) \
+    ret = stlink_swim_begin_read(stl, addr, len); \
     if (ret != 0) \
         return; \
     ret = swim_poll(stl); \
     if (ret != 0) \
         return; \
-    ret = stlink_swim_read(stl, addr, len, x1, buf); \
+    ret = stlink_swim_read(stl, len, buf); \
     if (ret != 0) \
         return
 
@@ -83,7 +83,7 @@ static void swim(stlink *stl)
     CHECK_SWIM(stlink_swim_write(stl, 0x7f80, 1, buf));
     CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
 
-    SWIM_READ(0x7f99, 1, 0xa0, buf);
+    SWIM_READ(0x7f99, 1, buf);
     dump_data(buf, 1);
 
     CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
@@ -99,27 +99,27 @@ static void swim(stlink *stl)
 
 #if 0
     // ??? boot ROM
-    SWIM_READ(0x67f0, 6, 0x00, buf);
+    SWIM_READ(0x67f0, 6, buf);
     dump_data(buf, 6);
 
     // ??? reserved (between GPIO and periph. reg. and boot ROM)
-    SWIM_READ(0x5808, 1, 0x00, buf);
+    SWIM_READ(0x5808, 1, buf);
     dump_data(buf, 1);
 
     // ??? option bytes
-    SWIM_READ(0x488e, 2, 0x00, buf);
+    SWIM_READ(0x488e, 2, buf);
     dump_data(buf, 2);
 
     // Read-out protection (ROP)
-    SWIM_READ(0x4800, 1, 0x00, buf);
+    SWIM_READ(0x4800, 1, buf);
     dump_data(buf, 1);
 
     // User boot code (UBC) (OPT1)
-    SWIM_READ(0x4801, 1, 0x00, buf);
+    SWIM_READ(0x4801, 1, buf);
     dump_data(buf, 1);
 
     // User boot code (UBC) (NOPT1)
-    SWIM_READ(0x4802, 1, 0x00, buf);
+    SWIM_READ(0x4802, 1, buf);
     dump_data(buf, 1);
 #endif
 
@@ -129,11 +129,11 @@ static void swim(stlink *stl)
     uint32_t flash_end = flash_start + flash_size;
     for (uint32_t addr = flash_start; addr < flash_end; addr += size) {
         uint16_t len = (addr + size > flash_end) ? (flash_end - addr) : size;
-        SWIM_READ(addr, len, 0x00, buf);
+        SWIM_READ(addr, len, buf);
         dump_data(buf, len);
     }
 
-    SWIM_READ(0x7f80, 1, 0x00, buf);
+    SWIM_READ(0x7f80, 1, buf);
     dump_data(buf, 1);
 
     buf[0] = 0xb6;
@@ -159,7 +159,7 @@ static void swim(stlink *stl)
     CHECK_SWIM(stlink_swim_write(stl, 0x7f80, 1, buf));
     CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
 
-    SWIM_READ(0x7f99, 1, 0xa0, buf);
+    SWIM_READ(0x7f99, 1, buf);
     dump_data(buf, 1);
 
     CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
@@ -175,27 +175,27 @@ static void swim(stlink *stl)
 
 #if 0
     // ??? boot ROM
-    SWIM_READ(0x67f0, 6, 0x00, buf);
+    SWIM_READ(0x67f0, 6, buf);
     dump_data(buf, 6);
 
     // ??? reserved (between GPIO and periph. reg. and boot ROM)
-    SWIM_READ(0x5808, 1, 0x00, buf);
+    SWIM_READ(0x5808, 1, buf);
     dump_data(buf, 1);
 
     // ??? option bytes
-    SWIM_READ(0x488e, 2, 0x00, buf);
+    SWIM_READ(0x488e, 2, buf);
     dump_data(buf, 2);
 
     // Read-out protection (ROP)
-    SWIM_READ(0x4800, 1, 0x00, buf);
+    SWIM_READ(0x4800, 1, buf);
     dump_data(buf, 1);
 
     // User boot code (UBC) (OPT1)
-    SWIM_READ(0x4801, 1, 0x00, buf);
+    SWIM_READ(0x4801, 1, buf);
     dump_data(buf, 1);
 
     // User boot code (UBC) (NOPT1)
-    SWIM_READ(0x4802, 1, 0x00, buf);
+    SWIM_READ(0x4802, 1, buf);
     dump_data(buf, 1);
 #endif
 
@@ -204,11 +204,11 @@ static void swim(stlink *stl)
     uint32_t eeprom_end = eeprom_start + eeprom_size;
     for (uint32_t addr = eeprom_start; addr < eeprom_end; addr += size) {
         uint16_t len = (addr + size > eeprom_end) ? (eeprom_end - addr) : size;
-        SWIM_READ(addr, len, 0x00, buf);
+        SWIM_READ(addr, len, buf);
         dump_data(buf, len);
     }
 
-    SWIM_READ(0x7f80, 1, 0x00, buf);
+    SWIM_READ(0x7f80, 1, buf);
     dump_data(buf, 1);
 
     buf[0] = 0xb6;
@@ -234,7 +234,7 @@ static void swim(stlink *stl)
     CHECK_SWIM(stlink_swim_write(stl, 0x7f80, 1, buf));
     CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
 
-    SWIM_READ(0x7f99, 1, 0xa0, buf);
+    SWIM_READ(0x7f99, 1, buf);
     dump_data(buf, 1);
 
     CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
@@ -250,39 +250,39 @@ static void swim(stlink *stl)
 
 #if 0
     // ??? boot ROM
-    SWIM_READ(0x67f0, 6, 0x00, buf);
+    SWIM_READ(0x67f0, 6, buf);
     dump_data(buf, 6);
 
     // ??? reserved (between GPIO and periph. reg. and boot ROM)
-    SWIM_READ(0x5808, 1, 0x00, buf);
+    SWIM_READ(0x5808, 1, buf);
     dump_data(buf, 1);
 
     // ??? option bytes
-    SWIM_READ(0x488e, 2, 0x00, buf);
+    SWIM_READ(0x488e, 2, buf);
     dump_data(buf, 2);
 
     // Read-out protection (ROP)
-    SWIM_READ(0x4800, 1, 0x00, buf);
+    SWIM_READ(0x4800, 1, buf);
     dump_data(buf, 1);
 
     // User boot code (UBC) (OPT1)
-    SWIM_READ(0x4801, 1, 0x00, buf);
+    SWIM_READ(0x4801, 1, buf);
     dump_data(buf, 1);
 
     // User boot code (UBC) (NOPT1)
-    SWIM_READ(0x4802, 1, 0x00, buf);
+    SWIM_READ(0x4802, 1, buf);
     dump_data(buf, 1);
 #endif
 
     // Option bytes
     for (uint32_t addr = 0x4800; addr <= 0x480e; addr++) {
-        SWIM_READ(addr, 1, 0x00, buf);
+        SWIM_READ(addr, 1, buf);
         dump_data(buf, 1);
     }
-    SWIM_READ(0x487e, 1, 0x00, buf);
+    SWIM_READ(0x487e, 1, buf);
     dump_data(buf, 1);
 
-    SWIM_READ(0x7f80, 1, 0x00, buf);
+    SWIM_READ(0x7f80, 1, buf);
     dump_data(buf, 1);
 
     buf[0] = 0xb6;
@@ -313,7 +313,7 @@ static void swim_flash(stlink *stl)
     CHECK_SWIM(stlink_swim_write(stl, 0x7f80, 1, buf));
     CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
 
-    SWIM_READ(0x7f99, 1, 0xa0, buf);
+    SWIM_READ(0x7f99, 1, buf);
     dump_data(buf, 1);
 
     CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
@@ -330,27 +330,27 @@ static void swim_flash(stlink *stl)
 
 #if 0
     // ??? boot ROM
-    SWIM_READ(0x67f0, 6, 0x00, buf);
+    SWIM_READ(0x67f0, 6, buf);
     dump_data(buf, 6);
 
     // ??? reserved (between GPIO and periph. reg. and boot ROM)
-    SWIM_READ(0x5808, 1, 0x00, buf);
+    SWIM_READ(0x5808, 1, buf);
     dump_data(buf, 1);
 
     // ??? option bytes
-    SWIM_READ(0x488e, 2, 0x00, buf);
+    SWIM_READ(0x488e, 2, buf);
     dump_data(buf, 2);
 
     // Read-out protection (ROP)
-    SWIM_READ(0x4800, 1, 0x00, buf);
+    SWIM_READ(0x4800, 1, buf);
     dump_data(buf, 1);
 
     // User boot code (UBC) (OPT1)
-    SWIM_READ(0x4801, 1, 0x00, buf);
+    SWIM_READ(0x4801, 1, buf);
     dump_data(buf, 1);
 
     // User boot code (UBC) (NOPT1)
-    SWIM_READ(0x4802, 1, 0x00, buf);
+    SWIM_READ(0x4802, 1, buf);
     dump_data(buf, 1);
 #endif
 
@@ -365,7 +365,7 @@ static void swim_flash(stlink *stl)
     buf[0] = 0x56;
     CHECK_SWIM(stlink_swim_write(stl, 0x5064, 1, buf));
     // FLASH_IAPSR
-    SWIM_READ(0x505f, 1, 0x56, buf);
+    SWIM_READ(0x505f, 1, buf);
     dump_data(buf, 1);
 
     // -> RAM
@@ -391,7 +391,7 @@ static void swim_flash(stlink *stl)
     buf[0] = 0xe8;
     CHECK_SWIM(stlink_swim_write(stl, 0x7f0a, 1, buf));
 
-    SWIM_READ(0x7f99, 1, 0xe8, buf);
+    SWIM_READ(0x7f99, 1, buf);
     dump_data(buf, 1);
     buf[0] = 0x09;
     CHECK_SWIM(stlink_swim_write(stl, 0x7f99, 1, buf));
@@ -402,7 +402,7 @@ static void swim_flash(stlink *stl)
     CHECK_SWIM(stlink_swim_write(stl, 0x012f, 0x0202, buf));
     // XXX buf
     CHECK_SWIM(stlink_swim_write(stl, 0x0331, 0x0202, buf));
-    SWIM_READ(0x012f, 1, 0x5000, buf);
+    SWIM_READ(0x012f, 1, buf);
     dump_data(buf, 1);
 }
 

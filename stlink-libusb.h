@@ -29,8 +29,8 @@ int stlink_swim_do_07(stlink *stl, uint32_t addr, uint16_t len, uint8_t x);
 int stlink_swim_do_08(stlink *stl, uint32_t addr, uint16_t len, uint8_t x);
 int stlink_swim_get_busy(stlink *stl, uint32_t *status);
 int stlink_swim_write(stlink *stl, uint32_t addr, uint16_t len, uint8_t *buffer);
-int stlink_swim_begin_read(stlink *stl, uint32_t addr, uint16_t len, uint16_t x);
-int stlink_swim_read(stlink *stl, uint32_t addr, uint16_t length, uint16_t x, uint8_t *buffer);
+int stlink_swim_begin_read(stlink *stl, uint32_t addr, uint16_t len);
+int stlink_swim_read(stlink *stl, uint16_t length, uint8_t *buffer);
 
 
 #endif
