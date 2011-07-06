@@ -277,7 +277,7 @@ int stlink_swim_do_08(stlink *stl, uint32_t addr, uint16_t length, uint8_t x)
 int stlink_swim_get_busy(stlink *stl, uint32_t *status)
 {
     printf("reading 0x09...\n");
-    uint8_t cdb[10];
+    uint8_t cdb[2]; // 10
     memset(cdb, 0, sizeof(cdb));
     cdb[0] = STLINK_SWIM_COMMAND;
     cdb[1] = STLINK_SWIM_GET_BUSY;
