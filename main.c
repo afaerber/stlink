@@ -110,15 +110,13 @@ static void swim(stlink *stl)
     dump_data(buf, 2);
 
     // Read-out protection (ROP)
-    SWIM_READ(0x4800, 1, buf);
+    SWIM_READ(STM8S105_OPT0, 1, buf);
     dump_data(buf, 1);
 
-    // User boot code (UBC) (OPT1)
-    SWIM_READ(0x4801, 1, buf);
+    // User boot code (UBC)
+    SWIM_READ(STM8S105_OPT1, 1, buf);
     dump_data(buf, 1);
-
-    // User boot code (UBC) (NOPT1)
-    SWIM_READ(0x4802, 1, buf);
+    SWIM_READ(STM8S105_NOPT1, 1, buf);
     dump_data(buf, 1);
 #endif
 
@@ -185,15 +183,13 @@ static void swim(stlink *stl)
     dump_data(buf, 2);
 
     // Read-out protection (ROP)
-    SWIM_READ(0x4800, 1, buf);
+    SWIM_READ(STM8S105_OPT0, 1, buf);
     dump_data(buf, 1);
 
-    // User boot code (UBC) (OPT1)
-    SWIM_READ(0x4801, 1, buf);
+    // User boot code (UBC)
+    SWIM_READ(STM8S105_OPT1, 1, buf);
     dump_data(buf, 1);
-
-    // User boot code (UBC) (NOPT1)
-    SWIM_READ(0x4802, 1, buf);
+    SWIM_READ(STM8S105_NOPT1, 1, buf);
     dump_data(buf, 1);
 #endif
 
@@ -259,15 +255,13 @@ static void swim(stlink *stl)
     dump_data(buf, 2);
 
     // Read-out protection (ROP)
-    SWIM_READ(0x4800, 1, buf);
+    SWIM_READ(STM8S105_OPT0, 1, buf);
     dump_data(buf, 1);
 
-    // User boot code (UBC) (OPT1)
-    SWIM_READ(0x4801, 1, buf);
+    // User boot code (UBC)
+    SWIM_READ(STM8S105_OPT1, 1, buf);
     dump_data(buf, 1);
-
-    // User boot code (UBC) (NOPT1)
-    SWIM_READ(0x4802, 1, buf);
+    SWIM_READ(STM8S105_NOPT1, 1, buf);
     dump_data(buf, 1);
 #endif
 
@@ -276,7 +270,7 @@ static void swim(stlink *stl)
         SWIM_READ(addr, 1, buf);
         dump_data(buf, 1);
     }
-    SWIM_READ(0x487e, 1, buf);
+    SWIM_READ(STM8S105_OPTBL, 1, buf);
     dump_data(buf, 1);
 
     SWIM_READ(STM8_SWIM_CSR, 1, buf);
