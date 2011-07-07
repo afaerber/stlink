@@ -79,7 +79,9 @@ static void swim(stlink *stl)
 
     uint8_t *buf = malloc(size);
 
-    buf[0] = 0xa0;
+    // 0xa0
+    buf[0] = STM8_SWIM_CSR_SAFE_MASK |
+             STM8_SWIM_CSR_SWIM_DM;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
     CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
 
@@ -87,10 +89,17 @@ static void swim(stlink *stl)
     dump_data(buf, 1);
 
     CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
-    buf[0] = 0xb0;
+    // 0xb0
+    buf[0] = STM8_SWIM_CSR_SAFE_MASK |
+             STM8_SWIM_CSR_SWIM_DM |
+             STM8_SWIM_CSR_HS;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
     CHECK_SWIM(stlink_swim_do_03(stl, 0x01));
-    buf[0] = 0xb4;
+    // 0xb4
+    buf[0] = STM8_SWIM_CSR_SAFE_MASK |
+             STM8_SWIM_CSR_SWIM_DM |
+             STM8_SWIM_CSR_HS |
+             STM8_SWIM_CSR_RST;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
 
     buf[0] = 0x00;
@@ -133,7 +142,12 @@ static void swim(stlink *stl)
     SWIM_READ(STM8_SWIM_CSR, 1, buf);
     dump_data(buf, 1);
 
-    buf[0] = 0xb6;
+    // 0xb6
+    buf[0] = STM8_SWIM_CSR_SAFE_MASK |
+             STM8_SWIM_CSR_SWIM_DM |
+             STM8_SWIM_CSR_HS |
+             STM8_SWIM_CSR_RST |
+             STM8_SWIM_CSR_HSIT;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
     CHECK_SWIM(stlink_swim_do_05(stl, 0x7f80, 1, 0xb6));
     // demo resumes blinking
