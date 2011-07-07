@@ -32,6 +32,8 @@ static inline void dump_data(uint8_t *buf, size_t len)
 static inline int swim_poll(stlink *stl)
 {
     int ret;
+    // 01 during read
+    // 04 if missing prologue
     uint32_t busy;
     do {
         ret = stlink_swim_get_busy(stl, &busy);
@@ -42,53 +44,44 @@ static inline int swim_poll(stlink *stl)
 #define CHECK_SWIM(x) \
     ret = x; \
     if (ret != 0) \
-        return; \
+        return -1; \
     ret = swim_poll(stl); \
     if (ret != 0) \
-        return
+        return -1
 
 #define SWIM_READ(addr, len, buf) \
     ret = stlink_swim_begin_read(stl, addr, len); \
     if (ret != 0) \
-        return; \
+        return -1; \
     ret = swim_poll(stl); \
     if (ret != 0) \
-        return; \
+        return -1; \
     ret = stlink_swim_read(stl, len, buf); \
     if (ret != 0) \
-        return
+        return -1
 
-static void swim(stlink *stl)
+static int swim_prologue(stlink *stl)
 {
-    uint16_t size = 0;
-    int ret = stlink_swim_get_size(stl, &size);
-    if (ret != 0)
-        return;
-    printf("size = 0x%" PRIx16 "\n", size);
-    ret = stlink_swim_get_02(stl);
-    if (ret != 0)
-        return;
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x0, 0x0100, 0x00));
+    int ret;
+    uint8_t buf[2];
 
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x0, 0x0100, 0x00));
-    CHECK_SWIM(stlink_swim_do_08(stl, 0x0, 0x0100, 0x00));
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x0, 0x0100, 0x00));
-    CHECK_SWIM(stlink_swim_do_04(stl, 0x0, 0x0100, 0x00)); // causes demo to stop blinking
+    CHECK_SWIM(stlink_swim_do_07(stl));
+    CHECK_SWIM(stlink_swim_do_08(stl));
+    CHECK_SWIM(stlink_swim_do_07(stl));
+    CHECK_SWIM(stlink_swim_do_04(stl)); // causes demo to stop blinking
     CHECK_SWIM(stlink_swim_do_03(stl, 0x00));
-    CHECK_SWIM(stlink_swim_do_05(stl, 0x0, 0, 0x00));
-
-    uint8_t *buf = malloc(size);
+    CHECK_SWIM(stlink_swim_do_05(stl));
 
     // 0xa0
     buf[0] = STM8_SWIM_CSR_SAFE_MASK |
              STM8_SWIM_CSR_SWIM_DM;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
+    CHECK_SWIM(stlink_swim_do_08(stl));
 
     SWIM_READ(STM8_DM_CSR2, 1, buf);
     dump_data(buf, 1);
 
-    CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
+    CHECK_SWIM(stlink_swim_do_06(stl));
     // 0xb0
     buf[0] = STM8_SWIM_CSR_SAFE_MASK |
              STM8_SWIM_CSR_SWIM_DM |
@@ -105,7 +98,6 @@ static void swim(stlink *stl)
     buf[0] = 0x00;
     CHECK_SWIM(stlink_swim_write(stl, STM8S105_CLK_CKDIVR, 1, buf));
 
-#if 0
     // ??? boot ROM
     SWIM_READ(0x67f0, 6, buf);
     dump_data(buf, 6);
@@ -127,17 +119,14 @@ static void swim(stlink *stl)
     dump_data(buf, 1);
     SWIM_READ(STM8S105_NOPT1, 1, buf);
     dump_data(buf, 1);
-#endif
 
-    // Flash program memory
-    uint32_t flash_start = 0x8000;
-    uint16_t flash_size = 32 * 1024;
-    uint32_t flash_end = flash_start + flash_size;
-    for (uint32_t addr = flash_start; addr < flash_end; addr += size) {
-        uint16_t len = (addr + size > flash_end) ? (flash_end - addr) : size;
-        SWIM_READ(addr, len, buf);
-        dump_data(buf, len);
-    }
+    return 0;
+}
+
+static int swim_epilogue(stlink *stl)
+{
+    int ret;
+    uint8_t buf[2];
 
     SWIM_READ(STM8_SWIM_CSR, 1, buf);
     dump_data(buf, 1);
@@ -149,63 +138,53 @@ static void swim(stlink *stl)
              STM8_SWIM_CSR_RST |
              STM8_SWIM_CSR_HSIT;
     CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_05(stl, 0x7f80, 1, 0xb6));
+    CHECK_SWIM(stlink_swim_do_05(stl));
     // demo resumes blinking
     CHECK_SWIM(stlink_swim_do_03(stl, 0x00));
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
+    CHECK_SWIM(stlink_swim_do_07(stl));
     // demo stops blinking
+
+    return 0;
+}
+
+static int swim(stlink *stl)
+{
+    uint16_t size = 0;
+    int ret = stlink_swim_get_size(stl, &size);
+    if (ret != 0)
+        return -1;
+    printf("size = 0x%" PRIx16 "\n", size);
+
+    uint8_t *buf = malloc(size);
+
+    ret = stlink_swim_get_02(stl, 0x01);
+    if (ret != 0)
+        return -1;
+    CHECK_SWIM(stlink_swim_do_07(stl));
+
+    ret = swim_prologue(stl);
+    if (ret != 0)
+        return -1;
+
+    // Flash program memory
+    uint32_t flash_start = 0x8000;
+    uint16_t flash_size = 32 * 1024;
+    uint32_t flash_end = flash_start + flash_size;
+    for (uint32_t addr = flash_start; addr < flash_end; addr += size) {
+        uint16_t len = (addr + size > flash_end) ? (flash_end - addr) : size;
+        SWIM_READ(addr, len, buf);
+        dump_data(buf, len);
+    }
+
+    ret = swim_epilogue(stl);
+    if (ret != 0)
+        return -1;
 
     // ---
 
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
-    CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xb6));
-    // demo resumes blinking
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
-    // demo stops blinking
-    CHECK_SWIM(stlink_swim_do_04(stl, 0x7f80, 1, 0xb6));
-    CHECK_SWIM(stlink_swim_do_03(stl, 0x00));
-    CHECK_SWIM(stlink_swim_do_05(stl, 0x7f80, 1, 0xb6));
-
-    buf[0] = 0xa0;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
-
-    SWIM_READ(STM8_DM_CSR2, 1, buf);
-    dump_data(buf, 1);
-
-    CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
-    buf[0] = 0xb0;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_03(stl, 0x01));
-    buf[0] = 0xb4;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-
-    buf[0] = 0x00;
-    CHECK_SWIM(stlink_swim_write(stl, STM8S105_CLK_CKDIVR, 1, buf));
-
-#if 0
-    // ??? boot ROM
-    SWIM_READ(0x67f0, 6, buf);
-    dump_data(buf, 6);
-
-    // ??? reserved (between GPIO and periph. reg. and boot ROM)
-    SWIM_READ(0x5808, 1, buf);
-    dump_data(buf, 1);
-
-    // ??? option bytes
-    SWIM_READ(0x488e, 2, buf);
-    dump_data(buf, 2);
-
-    // Read-out protection (ROP)
-    SWIM_READ(STM8S105_OPT0, 1, buf);
-    dump_data(buf, 1);
-
-    // User boot code (UBC)
-    SWIM_READ(STM8S105_OPT1, 1, buf);
-    dump_data(buf, 1);
-    SWIM_READ(STM8S105_NOPT1, 1, buf);
-    dump_data(buf, 1);
-#endif
+    ret = swim_prologue(stl);
+    if (ret != 0)
+        return -1;
 
     uint32_t eeprom_start = 0x4000;
     uint16_t eeprom_size = 1024;
@@ -216,68 +195,15 @@ static void swim(stlink *stl)
         dump_data(buf, len);
     }
 
-    SWIM_READ(STM8_SWIM_CSR, 1, buf);
-    dump_data(buf, 1);
-
-    buf[0] = 0xb6;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_05(stl, 0x7f80, 1, 0xb6));
-    // demo resumes blinking
-    CHECK_SWIM(stlink_swim_do_03(stl, 0x00));
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
-    // demo stops blinking
+    ret = swim_epilogue(stl);
+    if (ret != 0)
+        return -1;
 
     // ---
 
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
-    CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xb6));
-    // demo resumes blinking
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
-    // demo stops blinking
-    CHECK_SWIM(stlink_swim_do_04(stl, 0x7f80, 1, 0xb6));
-    CHECK_SWIM(stlink_swim_do_03(stl, 0x00));
-    CHECK_SWIM(stlink_swim_do_05(stl, 0x7f80, 1, 0xb6));
-
-    buf[0] = 0xa0;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
-
-    SWIM_READ(STM8_DM_CSR2, 1, buf);
-    dump_data(buf, 1);
-
-    CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
-    buf[0] = 0xb0;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_03(stl, 0x01));
-    buf[0] = 0xb4;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-
-    buf[0] = 0x00;
-    CHECK_SWIM(stlink_swim_write(stl, STM8S105_CLK_CKDIVR, 1, buf));
-
-#if 0
-    // ??? boot ROM
-    SWIM_READ(0x67f0, 6, buf);
-    dump_data(buf, 6);
-
-    // ??? reserved (between GPIO and periph. reg. and boot ROM)
-    SWIM_READ(0x5808, 1, buf);
-    dump_data(buf, 1);
-
-    // ??? option bytes
-    SWIM_READ(0x488e, 2, buf);
-    dump_data(buf, 2);
-
-    // Read-out protection (ROP)
-    SWIM_READ(STM8S105_OPT0, 1, buf);
-    dump_data(buf, 1);
-
-    // User boot code (UBC)
-    SWIM_READ(STM8S105_OPT1, 1, buf);
-    dump_data(buf, 1);
-    SWIM_READ(STM8S105_NOPT1, 1, buf);
-    dump_data(buf, 1);
-#endif
+    ret = swim_prologue(stl);
+    if (ret != 0)
+        return -1;
 
     // Option bytes
     for (uint32_t addr = 0x4800; addr <= 0x480e; addr++) {
@@ -287,77 +213,24 @@ static void swim(stlink *stl)
     SWIM_READ(STM8S105_OPTBL, 1, buf);
     dump_data(buf, 1);
 
-    SWIM_READ(STM8_SWIM_CSR, 1, buf);
-    dump_data(buf, 1);
-
-    buf[0] = 0xb6;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_05(stl, 0x7f80, 1, 0xb6));
-    // demo resumes blinking
-    CHECK_SWIM(stlink_swim_do_03(stl, 0x00));
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
-    // demo stops blinking
+    ret = swim_epilogue(stl);
+    if (ret != 0)
+        return -1;
 
     free(buf);
+
+    return 0;
 }
 
 __attribute__((unused))
-static void swim_flash(stlink *stl)
+static int swim_flash(stlink *stl)
 {
     int ret;
     uint8_t *buf; //XXX
 
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
-    CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xb6));
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x7f80, 1, 0xb6));
-    CHECK_SWIM(stlink_swim_do_04(stl, 0x7f80, 1, 0xb6));
-    CHECK_SWIM(stlink_swim_do_03(stl, 0x00));
-    CHECK_SWIM(stlink_swim_do_05(stl, 0x7f80, 1, 0xb6));
-
-    buf[0] = 0xa0;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_08(stl, 0x7f80, 1, 0xa0));
-
-    SWIM_READ(STM8_DM_CSR2, 1, buf);
-    dump_data(buf, 1);
-
-    CHECK_SWIM(stlink_swim_do_06(stl, 0x7f99, 1, 0xa0));
-
-    buf[0] = 0xb0;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-    CHECK_SWIM(stlink_swim_do_03(stl, 0x01));
-    buf[0] = 0xb4;
-    CHECK_SWIM(stlink_swim_write(stl, STM8_SWIM_CSR, 1, buf));
-
-    // ??? GPIO and periph. reg.
-    buf[0] = 0x00;
-    CHECK_SWIM(stlink_swim_write(stl, 0x50c6, 1, buf));
-
-#if 0
-    // ??? boot ROM
-    SWIM_READ(0x67f0, 6, buf);
-    dump_data(buf, 6);
-
-    // ??? reserved (between GPIO and periph. reg. and boot ROM)
-    SWIM_READ(0x5808, 1, buf);
-    dump_data(buf, 1);
-
-    // ??? option bytes
-    SWIM_READ(0x488e, 2, buf);
-    dump_data(buf, 2);
-
-    // Read-out protection (ROP)
-    SWIM_READ(0x4800, 1, buf);
-    dump_data(buf, 1);
-
-    // User boot code (UBC) (OPT1)
-    SWIM_READ(0x4801, 1, buf);
-    dump_data(buf, 1);
-
-    // User boot code (UBC) (NOPT1)
-    SWIM_READ(0x4802, 1, buf);
-    dump_data(buf, 1);
-#endif
+    ret = swim_prologue(stl);
+    if (ret != 0)
+        return -1;
 
     // Unlock program memory (FLASH_PUKR)
     buf[0] = 0x56;
@@ -409,6 +282,8 @@ static void swim_flash(stlink *stl)
     CHECK_SWIM(stlink_swim_write(stl, 0x0331, 0x0202, buf));
     SWIM_READ(0x012f, 1, buf);
     dump_data(buf, 1);
+
+    return 0;
 }
 
 static void connect(libusb_context *usb_context)
