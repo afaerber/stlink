@@ -68,9 +68,9 @@ static void swim(stlink *stl)
     ret = stlink_swim_get_02(stl);
     if (ret != 0)
         return;
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x0, 0, 0x00));
+    CHECK_SWIM(stlink_swim_do_07(stl, 0x0, 0x0100, 0x00));
 
-    CHECK_SWIM(stlink_swim_do_07(stl, 0x0, 0, 0x00));
+    CHECK_SWIM(stlink_swim_do_07(stl, 0x0, 0x0100, 0x00));
     CHECK_SWIM(stlink_swim_do_08(stl, 0x0, 0x0100, 0x00));
     CHECK_SWIM(stlink_swim_do_07(stl, 0x0, 0x0100, 0x00));
     CHECK_SWIM(stlink_swim_do_04(stl, 0x0, 0x0100, 0x00)); // causes demo to stop blinking
