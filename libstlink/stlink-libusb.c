@@ -64,7 +64,7 @@ struct STLink {
 stlink *stlink_open(libusb_context *usb_context)
 {
     stlink *stl = malloc(sizeof(stlink));
-    stl->handle = libusb_open_device_with_vid_pid(usb_context, USB_ST_VID, USB_STLINK_PID);
+    stl->handle = libusb_open_device_with_vid_pid(usb_context, USB_VID_ST, USB_PID_STLINK);
     if (stl->handle == NULL) {
         free(stl);
         return NULL;

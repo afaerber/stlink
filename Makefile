@@ -1,16 +1,21 @@
-all: stlink
+all: stlink-test
 
 .PHONY: test load-kext
 
 CFLAGS = -std=gnu99 -Wall -Werror
+DGFLAGS = -MMD -MP -MT $@
 
 -include config.mak
 
-stlink: main.c stlink-libusb.c stlink-libusb.h stlink-cmd.c stlink.h bswap.h Makefile
-	$(CC) -o $@ $(CPPFLAGS) $(CFLAGS) main.c stlink-libusb.c stlink-cmd.c $(LDFLAGS) -lusb-1.0
+LIBSTLINK_SOURCES = stlink-libusb.c stlink-cmd.c
 
-test: stlink
-	./stlink
+-include stlink-test.d
+
+stlink-test: main.c $(addprefix libstlink/, $(LIBSTLINK_SOURCES)) Makefile
+	$(CC) -o $@ $(CPPFLAGS) -I. -Ilibstlink $(DGFLAGS) $(CFLAGS) main.c $(addprefix libstlink/,stlink-libusb.c stlink-cmd.c) $(LDFLAGS) -lusb-1.0
+
+test: stlink-test
+	./stlink-test
 
 DEST=/tmp
 KEXT=STLink

@@ -12,6 +12,7 @@
 #include <inttypes.h>
 #include "stlink.h"
 #include "stlink-libusb.h"
+#include "stm8.h"
 
 enum {
     USB_DEBUGLEVEL_NONE     = 0,
