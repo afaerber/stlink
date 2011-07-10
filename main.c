@@ -232,18 +232,17 @@ static int swim_flash(stlink *stl)
     if (ret != 0)
         return -1;
 
-    // Unlock program memory (FLASH_PUKR)
+    // Unlock program memory
     buf[0] = 0x56;
-    CHECK_SWIM(stlink_swim_write(stl, 0x5062, 1, buf));
+    CHECK_SWIM(stlink_swim_write(stl, STM8S105_FLASH_PUKR, 1, buf));
     buf[0] = 0xae;
-    CHECK_SWIM(stlink_swim_write(stl, 0x5062, 1, buf));
-    // Unlock data EEPROM and option bytes (FLASH_DUKR)
+    CHECK_SWIM(stlink_swim_write(stl, STM8S105_FLASH_PUKR, 1, buf));
+    // Unlock data EEPROM and option bytes
     buf[0] = 0xae;
-    CHECK_SWIM(stlink_swim_write(stl, 0x5064, 1, buf));
+    CHECK_SWIM(stlink_swim_write(stl, STM8S105_FLASH_DUKR, 1, buf));
     buf[0] = 0x56;
-    CHECK_SWIM(stlink_swim_write(stl, 0x5064, 1, buf));
-    // FLASH_IAPSR
-    SWIM_READ(0x505f, 1, buf);
+    CHECK_SWIM(stlink_swim_write(stl, STM8S105_FLASH_DUKR, 1, buf));
+    SWIM_READ(STM8S105_FLASH_IAPSR, 1, buf);
     dump_data(buf, 1);
 
     // -> RAM
@@ -261,19 +260,19 @@ static int swim_flash(stlink *stl)
     buf[0] = 0x00;
     CHECK_SWIM(stlink_swim_write(stl, 0x0331, 1, buf));
     buf[0] = 0x00;
-    CHECK_SWIM(stlink_swim_write(stl, 0x50c6, 1, buf));
+    CHECK_SWIM(stlink_swim_write(stl, STM8S105_CLK_CKDIVR, 1, buf));
     buf[0] = 0x00;
     buf[1] = 0x00;
     buf[2] = 0x30;
-    CHECK_SWIM(stlink_swim_write(stl, 0x7f01, 3, buf));
+    CHECK_SWIM(stlink_swim_write(stl, STM8_REG_PCE, 3, buf));
     buf[0] = 0xe8;
-    CHECK_SWIM(stlink_swim_write(stl, 0x7f0a, 1, buf));
+    CHECK_SWIM(stlink_swim_write(stl, STM8_REG_CC, 1, buf));
 
-    SWIM_READ(0x7f99, 1, buf);
+    SWIM_READ(STM8_DM_CSR2, 1, buf);
     dump_data(buf, 1);
-    buf[0] = 0x09;
+    buf[0] = STM8_DM_CSR2_STALL | STM8_DM_CSR2_FLUSH;
     CHECK_SWIM(stlink_swim_write(stl, STM8_DM_CSR2, 1, buf));
-    buf[0] = 0x01;
+    buf[0] = STM8_DM_CSR2_FLUSH;
     CHECK_SWIM(stlink_swim_write(stl, STM8_DM_CSR2, 1, buf));
 
     // XXX buf
