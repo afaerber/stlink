@@ -170,11 +170,33 @@ static int swim(stlink *stl)
     uint32_t flash_start = 0x8000;
     uint16_t flash_size = 32 * 1024;
     uint32_t flash_end = flash_start + flash_size;
+    FILE *file = fopen("flash.bin", "w");
+    if (file == NULL)
+        return -1;
     for (uint32_t addr = flash_start; addr < flash_end; addr += size) {
         uint16_t len = (addr + size > flash_end) ? (flash_end - addr) : size;
-        SWIM_READ(addr, len, buf);
+        ret = stlink_swim_begin_read(stl, addr, len);
+        if (ret != 0) {
+            fclose(file);
+            return -1;
+        }
+        ret = swim_poll(stl);
+        if (ret != 0) {
+            fclose(file);
+            return -1;
+        }
+        ret = stlink_swim_read(stl, len, buf);
+        if (ret != 0) {
+            fclose(file);
+            return -1;
+        }
         dump_data(buf, len);
+        if (fwrite(buf, 1, len, file) < len) {
+            fclose(file);
+            return -1;
+        }
     }
+    fclose(file);
 
     ret = swim_epilogue(stl);
     if (ret != 0)
