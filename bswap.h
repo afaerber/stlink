@@ -18,6 +18,35 @@
 #define be16_to_cpu(x) CFSwapInt16BigToHost(x)
 #define be32_to_cpu(x) CFSwapInt32BigToHost(x)
 
+#elif defined(__linux)
+
+#include <endian.h>
+#include <byteswap.h>
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+static inline uint16_t cpu_to_le16(uint16_t x)
+{
+    return x;
+}
+static inline uint32_t cpu_to_le32(uint32_t x)
+{
+    return x;
+}
+static inline uint16_t le16_to_cpu(uint16_t x)
+{
+    return x;
+}
+static inline uint32_t le32_to_cpu(uint32_t x)
+{
+    return x;
+}
+#define cpu_to_be16 bswap_16
+#define cpu_to_be32 bswap_32
+#define be16_to_cpu bswap_16
+#define be32_to_cpu bswap_32
+#else
+#define 
+#endif
+
 #else
 #error Byte swapping not yet implemented for this platform
 #endif
