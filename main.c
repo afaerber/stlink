@@ -248,8 +248,13 @@ static int swim(stlink *stl)
 __attribute__((unused))
 static int swim_flash(stlink *stl)
 {
-    int ret;
-    uint8_t *buf; //XXX
+    uint16_t size = 0;
+    int ret = stlink_swim_get_size(stl, &size);
+    if (ret != 0)
+        return -1;
+    printf("size = 0x%" PRIx16 "\n", size);
+
+    uint8_t *buf = malloc(size);
 
     ret = swim_prologue(stl);
     if (ret != 0)
