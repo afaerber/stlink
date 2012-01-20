@@ -100,6 +100,8 @@ stlink *stlink_open(libusb_context *usb_context)
     ret = libusb_kernel_driver_active(stl->handle, 0);
     if (ret == 1) {
         printf("kernel driver active\n");
+        ret = libusb_detach_kernel_driver(stl->handle, 0);
+        fprintf(stderr, "detaching kernel driver failed: %d\n", ret);
     } else if (ret == 0) {
         //printf("kernel driver not active\n");
     } else {
